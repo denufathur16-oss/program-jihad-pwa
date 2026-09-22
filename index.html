@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#064e3b">
+  <meta name="description" content="Program Jihad PJ Pemuda Persis GG Laksana">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="manifest" href="./manifest.json">
+  <link rel="apple-touch-icon" href="./icons/icon-192.png">
+  <title>Program Jihad PJ</title>
+  <style>
+    :root{--green:#064e3b;--green2:#022c22;--yellow:#facc15}
+    *{box-sizing:border-box}
+    html,body{margin:0;width:100%;height:100%;background:var(--green2);font-family:Inter,Arial,sans-serif}
+    body{overflow:hidden}
+    .app{height:100dvh;display:flex;flex-direction:column;background:var(--green2)}
+    .topbar{height:54px;flex:0 0 54px;display:flex;align-items:center;justify-content:space-between;padding:0 12px;color:#fff;background:linear-gradient(135deg,#022c22,#064e3b);border-bottom:2px solid var(--yellow);padding-top:env(safe-area-inset-top)}
+    .brand{font-weight:900;font-size:13px;letter-spacing:.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    #installBtn{display:none;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.1);color:#fff;border-radius:9px;padding:7px 10px;font-size:10px;font-weight:800}
+    iframe{display:block;border:0;width:100%;flex:1;min-height:0;background:#f1f5f3}
+    .offline{display:none;position:fixed;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom));z-index:10;padding:10px 12px;border-radius:12px;background:#111827;color:#fff;font-size:11px;text-align:center;box-shadow:0 8px 30px rgba(0,0,0,.3)}
+  </style>
+</head>
+<body>
+<div class="app">
+  <div class="topbar">
+    <div class="brand">Program Jihad PJ</div>
+    <button id="installBtn" type="button">＋ Install App</button>
+  </div>
+  <iframe id="appFrame" title="Program Jihad PJ" allow="clipboard-read; clipboard-write"></iframe>
+</div>
+<div id="offline" class="offline">Koneksi internet diperlukan untuk memuat data Google Sheets.</div>
+<script>
+  // GANTI HANYA URL INI dengan URL Web App Google Apps Script milik Anda.
+  const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbx-mX0-pPcd0yHet0PWvyZIwJqLGkz4avuifTOZprTyNWSsrUW1JL5_oQn07K9F7GPZSQ/exec';
+
+  const frame = document.getElementById('appFrame');
+  const offline = document.getElementById('offline');
+
+  if (!/^https:\/\//i.test(GAS_WEB_APP_URL)) {
+    frame.srcdoc = '<div style="padding:24px;font:14px Arial;color:#064e3b;background:#fff;min-height:100%;line-height:1.6"><b>Konfigurasi belum selesai.</b><br>Isi <code>GAS_WEB_APP_URL</code> di file <code>index.html</code> dengan URL Web App Google Apps Script Anda.</div>';
+  } else {
+    frame.src = GAS_WEB_APP_URL;
+  }
+
+  window.addEventListener('online', () => offline.style.display='none');
+  window.addEventListener('offline', () => offline.style.display='block');
+  if (!navigator.onLine) offline.style.display='block';
+
+  let deferredPrompt = null;
+  const installBtn = document.getElementById('installBtn');
+  window.addEventListener('beforeinstallprompt', event => {
+    event.preventDefault();
+    deferredPrompt = event;
+    installBtn.style.display = 'block';
+  });
+  installBtn.addEventListener('click', async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    await deferredPrompt.userChoice;
+    deferredPrompt = null;
+    installBtn.style.display = 'none';
+  });
+  window.addEventListener('appinstalled', () => {
+    installBtn.style.display = 'none';
+    deferredPrompt = null;
+  });
+
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js').catch(err => console.error('SW:', err));
+    });
+  }
+</script>
+</body>
+</html>
